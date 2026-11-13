@@ -67,12 +67,13 @@ def main():
     ap.add_argument("--large", required=True)
     ap.add_argument("--results", default="results")
     ap.add_argument("--kappa", type=float, default=0.1)
+    ap.add_argument("--seed", type=int, default=0, help="sampling seed of the local model (the 3B model is greedy)")
     a = ap.parse_args()
-    gate = Gate.load(os.path.join(a.results, "gates", f"{a.local}.seed0", "gate.pkl"))
+    gate = Gate.load(os.path.join(a.results, "gates", f"{a.local}.seed{a.seed}", "gate.pkl"))
     large_ca = {r["qid"]: r for r in load(a.results, a.large, "calib", 0).values()}
     large_te = {r["qid"]: r for r in load(a.results, a.large, "test_b", 0).values()}
-    ca = list(load(a.results, a.local, "calib", 0).values())
-    te = list(load(a.results, a.local, "test_b", 0).values())
+    ca = list(load(a.results, a.local, "calib", a.seed).values())
+    te = list(load(a.results, a.local, "test_b", a.seed).values())
 
     Xc, yc, _, kc = matrix(ca, ALL_FEATURES, "orig")
     ca = [r for r, k in zip(ca, kc) if k]
@@ -111,9 +112,9 @@ def main():
                       f"{r['rs_l5']:+.3f} | {r['rs_l10']:+.3f} |\n")
     od = os.path.join(a.results, "analysis")
     os.makedirs(od, exist_ok=True)
-    with open(os.path.join(od, f"three_way_{a.local}.json"), "w") as f:
+    with open(os.path.join(od, f"three_way_{a.local}{'.seed%d' % a.seed if a.seed else ''}.json"), "w") as f:
         json.dump(out, f, indent=1, default=float)
-    with open(os.path.join(od, f"three_way_{a.local}.md"), "w") as f:
+    with open(os.path.join(od, f"three_way_{a.local}{'.seed%d' % a.seed if a.seed else ''}.md"), "w") as f:
         f.writelines(md)
     print("".join(md))
 

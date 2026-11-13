@@ -120,9 +120,10 @@ def main():
 
     od = os.path.join(a.results, "analysis")
     os.makedirs(od, exist_ok=True)
-    with open(os.path.join(od, f"local_{a.local}.json"), "w") as f:
+    tag = a.local + (f".seed{a.seed}" if a.seed else "")
+    with open(os.path.join(od, f"local_{tag}.json"), "w") as f:
         json.dump(out, f, indent=1, default=float)
-    with open(os.path.join(od, f"local_{a.local}.md"), "w") as f:
+    with open(os.path.join(od, f"local_{tag}.md"), "w") as f:
         f.writelines(md)
     print("".join(md))
 

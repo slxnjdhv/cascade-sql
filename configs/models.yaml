@@ -1,0 +1,88 @@
+# Model registry. Every backend is an OpenAI-compatible endpoint, so the same code runs
+# against vLLM on a GPU server/Colab, Ollama on a laptop, or a cloud API.
+# API keys are read from the environment variable named in `api_key_env` — never put keys here.
+# FREEZE this file (commit it) before running E1; record any later change in the paper.
+
+generation:            # defaults, can be overridden per model
+  n_samples: 8         # sampled candidates (plus 1 greedy)
+  temperature: 0.8
+  max_tokens: 2048
+  repair: true         # one repair round for candidates that fail to execute
+  exec_timeout_s: 30
+  n_example_values: 3  # example values per column in the schema DDL
+  prompt_style: omnisql
+
+models:
+  # ---------------- LAPTOP (Apple Silicon, MLX, in-process; no server needed) ----------------
+  # Run ONE model at a time on an 8 GB Mac. Weights download to ~/.cache/huggingface on first use.
+  # Base-paper protocol (Maleki et al., AAAI 2026): their prompt, temperature 0.7, top-10 alternatives.
+  qwen-coder-1.5b-mlx:                      # local "small" model (~1 GB, ~1.7 GB peak RAM)
+    kind: mlx
+    model: mlx-community/Qwen2.5-Coder-1.5B-Instruct-4bit   # Apache-2.0
+    top_k: 10
+    generation: {n_samples: 4, temperature: 0.7, prompt_style: maleki, max_tokens: 256, repair: greedy}
+
+  qwen-coder-0.5b-mlx:                      # ablation: tiny model
+    kind: mlx
+    model: mlx-community/Qwen2.5-Coder-0.5B-Instruct-4bit
+    top_k: 10
+    generation: {n_samples: 4, temperature: 0.7, prompt_style: maleki, max_tokens: 256, repair: greedy}
+
+  omnisql-7b-mlx:                           # local "large" escalation target (~4.3 GB)
+    kind: mlx
+    model: sazak/OmniSQL-7B-4bit-mlx         # community 4-bit conversion of seeklhy/OmniSQL-7B (Apache-2.0)
+    top_k: 0                                 # token alternatives not needed for the escalation target
+    generation: {n_samples: 0, prompt_style: maleki, max_tokens: 256, repair: greedy}
+
+  qwen-coder-3b-mlx:                        # fallback escalation target if 7B is too slow on 8 GB
+    kind: mlx
+    model: mlx-community/Qwen2.5-Coder-3B-Instruct-4bit
+    top_k: 0
+    generation: {n_samples: 0, prompt_style: maleki, max_tokens: 256, repair: greedy}
+
+  # ---------------- GPU server (optional; served with: vllm serve <hf-id> --max-model-len 16384)
+  omnisql-7b:
+    kind: openai
+    base_url: http://localhost:8000/v1
+    model: seeklhy/OmniSQL-7B            # Apache-2.0
+    logprobs: true
+    supports_n: true
+
+  qwen-coder-7b:
+    kind: openai
+    base_url: http://localhost:8001/v1
+    model: Qwen/Qwen2.5-Coder-7B-Instruct  # Apache-2.0
+    logprobs: true
+    supports_n: true
+
+  qwen-coder-1.5b:
+    kind: openai
+    base_url: http://localhost:8002/v1
+    model: Qwen/Qwen2.5-Coder-1.5B-Instruct  # Apache-2.0
+    logprobs: true
+    supports_n: true
+
+  # Laptop pilot via Ollama (`ollama pull qwen2.5-coder:1.5b`). Logprobs/n support depends on
+  # the Ollama version, so both are off here; f5 (log-prob) will then be missing.
+  qwen-coder-1.5b-ollama:
+    kind: openai
+    base_url: http://localhost:11434/v1
+    model: qwen2.5-coder:1.5b
+    logprobs: false
+    supports_n: false
+
+  # ---------------- escalation targets (greedy + repair only)
+  omnisql-32b:                           # target B: on-prem large model
+    kind: openai
+    base_url: http://localhost:8003/v1
+    model: seeklhy/OmniSQL-32B           # Apache-2.0
+    logprobs: false
+    generation: {n_samples: 0}
+
+  cloud-large:                           # target A: cloud API (fill in before the run)
+    kind: openai
+    base_url: https://YOUR-PROVIDER/v1   # any OpenAI-compatible endpoint
+    model: PINNED-MODEL-VERSION-STRING   # record the exact version and date in the paper
+    api_key_env: CLOUD_API_KEY
+    logprobs: false
+    generation: {n_samples: 0, prompt_style: generic}

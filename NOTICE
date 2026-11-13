@@ -1,0 +1,6 @@
+cascade-sql
+Copyright 2026 Sulaxan Jadhav.
+
+This product includes software derived from Text2SQL-Confidence
+(https://github.com/SepidehEntezari/Text2SQL-Confidence), Copyright its authors,
+licensed under the Apache License, Version 2.0. The derived code is in src/cascade_sql/sac.py.

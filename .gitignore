@@ -1,0 +1,14 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/raw/
+data/toy/
+results/
+demo_run/
+demo_run.log
+*.tmp
+.env
+results_release/
+*.zip
+.DS_Store

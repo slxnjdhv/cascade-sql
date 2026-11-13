@@ -91,6 +91,26 @@ for lam in (1, 5):
 md.append(f"| always answer | {100 * y.mean():.1f} | 0.0 | {100 * (1 - y.mean()):.1f} | {2 * y.mean() - 1:+.3f} | "
           f"{y.mean() - 5 * (1 - y.mean()):+.3f} |\n")
 
+
+# paired bootstrap CIs (2000 resamples)
+from sklearn.metrics import roc_auc_score
+sac = np.nan_to_num(col["l_sac_prod"], nan=0.0)
+f1 = col["f1_top_share"]
+auc = lambda s, i: roc_auc_score(y[i], s[i])
+area_ = lambda s, i: P.curve_area(P.escalation_curve(s[i], y[i], yl[i], tuple(np.linspace(0, 1, 21))))
+md.append("\n| quantity | value [95% CI] |\n|---|---|\n")
+for name, fn in (("gate AUROC", lambda i: auc(p, i)),
+                 ("gate − SAC-Prod AUROC", lambda i: auc(p, i) - auc(sac, i)),
+                 ("gate − consistency AUROC", lambda i: auc(p, i) - auc(f1, i)),
+                 ("gate − consistency area", lambda i: area_(p, i) - area_(f1, i))):
+    v, lo, hi = M.bootstrap_ci(fn, n, n_boot=2000)
+    out.setdefault("ci", {})[name] = (v, lo, hi)
+    k = 100 if "AUROC" in name else 1
+    md.append(f"| {name} | {k * v:+.3f} [{k * lo:+.3f}, {k * hi:+.3f}] |\n")
+md.append(f"\nMean predicted P(correct) {100 * p.mean():.1f}% vs. accuracy {100 * y.mean():.1f}% "
+          f"(BIRD calib accuracy {100 * yc.mean():.1f}%)\n")
+out["mean_p"] = float(p.mean())
+
 od = os.path.join(a.results, "analysis")
 os.makedirs(od, exist_ok=True)
 json.dump(out, open(os.path.join(od, "transfer_spider.json"), "w"), indent=1, default=float)

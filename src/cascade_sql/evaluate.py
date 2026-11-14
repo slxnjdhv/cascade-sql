@@ -333,7 +333,7 @@ def reproduce(results: str, model: str, split: str, seed: int, out_dir: str, lab
         for r in recs:
             cl = (r.get("candidate_labels") or {}).get(label)
             idx = next((i for i, c in enumerate(r["candidates"]) if c["kind"] == which), None)
-            if idx is None or cl is None:
+            if idx is None or cl is None or (r.get("labels") or {}).get(label) is None:
                 continue
             sc = score_candidate(r["candidates"][idx])
             if any(np.isnan(v) for v in sc.values()):

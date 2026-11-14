@@ -58,6 +58,7 @@ bash scripts/run_overnight.sh   # 1.5B on all splits, 3B escalation target, R0, 
 bash scripts/run_seed1.sh       # second sampling seed for the 1.5B model
 bash scripts/run_spider.sh      # Spider dev transfer
 export PYTHONPATH=src
+.venv/bin/python scripts/exclude_unscorable.py   # exclude bird_701 (reference exceeds the 180 s limit) for all models
 .venv/bin/python scripts/analyze_local.py --local qwen-coder-1.5b-mlx     # E1 + E6 ablation + certificate
 .venv/bin/python scripts/analyze_local.py --local qwen-coder-0.5b-mlx
 .venv/bin/python scripts/three_way.py --local qwen-coder-1.5b-mlx --large qwen-coder-3b-mlx   # two-stage policy

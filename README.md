@@ -88,8 +88,9 @@ runs read-only with a timeout.
 
 ## 5. Released model outputs
 
-All generated candidates, token log-probabilities, labels and features (`results/`, ~0.5 GB) are archived
-separately: **[archive DOI to be added on release]**.
+All generated candidates, token log-probabilities, labels and features (`results/`, ~0.5 GB uncompressed) are archived
+at Zenodo: **[doi:10.5281/zenodo.24212020](https://doi.org/10.5281/zenodo.24212020)** (CC BY 4.0). The record's
+`README.md` has a short script that restores the files into `results/`, so every analysis script runs without generating anything again.
 
 ## License
 
